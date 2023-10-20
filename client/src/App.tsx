@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Add from "./Add";
 
 function App() {
   interface Todo {
@@ -52,7 +53,9 @@ function App() {
           </div>
         )}
 
-        <div className="w-1/2 "></div>
+        <div className="w-1/2 ">
+          <Add />
+        </div>
       </main>
     </>
   );
