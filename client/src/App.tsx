@@ -1,31 +1,69 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import axios from "axios";
 import Add from "./Add";
 
+interface Todo {
+  _id: number;
+  title: string;
+  description: string;
+  done: boolean;
+}
+
 function App() {
-  interface Todo {
-    _id: number;
-    title: string;
-    description: string;
-    done: boolean;
-  }
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodo, setNewTodo] = useState<{ title: string; description: string }>({ title: "", description: "" });
+  const [loading, setLoading] = useState(false);
 
-  const [todos, setTods] = useState<string>();
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const getTodo = async () => {
+  const getTodos = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://localhost:4000/api/v1/todos");
-      setTods(response.data);
+      const response = await axios.get<Todo[]>("http://localhost:4000/api/v1/todos");
+      setTodos(response.data);
     } catch (error) {
       console.log(error);
     }
     setLoading(false);
   };
 
+  const handleTodoChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewTodo({
+      ...newTodo,
+      [name]: value,
+    });
+  };
+
+  const addTodo = async () => {
+    try {
+      const response = await axios.post<Todo>("http://localhost:4000/api/v1/todos", {
+        ...newTodo,
+        done: false,
+      });
+      setTodos([...todos, response.data]);
+      setNewTodo({ title: "", description: "" });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const toggleTodo = async (id: number) => {
+    const updatedTodos = todos.map((todo) => {
+      if (todo._id === id) {
+        todo.done = !todo.done;
+      }
+      return todo;
+    });
+
+    try {
+      await axios.put(`http://localhost:4000/api/v1/todos/${id}`, { done: updatedTodos.find((todo) => todo._id === id)?.done });
+      setTodos(updatedTodos);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
-    getTodo();
+    getTodos();
   }, []);
 
   return (
@@ -53,9 +91,7 @@ function App() {
           </div>
         )}
 
-        <div className="w-1/2 ">
-          <Add />
-        </div>
+        <div className="w-1/2 "></div>
       </main>
     </>
   );
